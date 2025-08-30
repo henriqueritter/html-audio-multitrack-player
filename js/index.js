@@ -64,13 +64,18 @@ function createAudioElement(track) {
   track.gainNode = new GainNode(audioCtx);
   track.gainNode.gain.value = track.volume;
 
-  track.mediaElement.connect(track.gainNode).connect(audioCtx.destination);
+  track.pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
+
+  track.mediaElement
+    .connect(track.gainNode)
+    .connect(track.pannerNode)
+    .connect(audioCtx.destination);
 
   return audioElement;
 }
 
 function createTrackElement(track) {
-  const { id, name, filePath } = track;
+  const { id, name } = track;
 
   const audioElement = createAudioElement(track);
 
@@ -84,6 +89,10 @@ function createTrackElement(track) {
   );
 
   const { htmlMuteButton, htmlVolumeInput } = createTrackVolumeControls({
+    parentHTMLElement: htmlTrackElement,
+  });
+
+  const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
     parentHTMLElement: htmlTrackElement,
   });
 
@@ -103,8 +112,8 @@ function createTrackElement(track) {
     if (!track.audioElement.muted) track.gainNode.gain.value = track.volume;
   });
 
-  const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
-    parentHTMLElement: htmlTrackElement,
+  htmlTrackPannerElement.addEventListener('input', () => {
+    track.pannerNode.pan.value = htmlTrackPannerElement.value;
   });
 
   htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
