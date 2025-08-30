@@ -18,7 +18,7 @@ let songInfo = {
 
 let tracks = [];
 
-window.onload = (event) => {
+window.onload = () => {
   fetch(
     'https://pub-2ee020cd36f344d7aa50a37abdbf165b.r2.dev/multitrack-quemeesse.json'
   )

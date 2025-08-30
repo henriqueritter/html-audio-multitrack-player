@@ -5,9 +5,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Multitrack Player - Henrique Ritter</title>
     <style>
-      html,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       body {
-        background-color: rgb(158, 188, 189);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        color: #ffffff;
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header span {
+        margin: 10px 0 0 0;
+        color: #b8c5d1;
+        font-size: 1.1rem;
+      }
+
+      main {
+        flex: 1;
+        padding: 4em;
+        min-width: 40em;
+        max-width: 90%;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      #masterControls {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .controlButton {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 8%;
+        cursor: pointer;
+        font-size: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        margin: 0.1em;
+        align-content: center;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .controlButton:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      }
+
+      #tracksCurrentTime {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        outline: none;
+        appearance: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      #tracksCurrentTime::-webkit-slider-thumb {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s ease;
+      }
+
+      #tracksCurrentTime::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      }
+
+      #tracksCurrentTime::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .tracks {
+        display: grid;
+        gap: 4em;
+      }
+
+      .track {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .track:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .track-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      .muteButton {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        max-width: 8em;
+        padding: 0.2em;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      }
+
+      .muteButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      }
+
+      .muteButton.active {
+        background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+      }
+
+      .volumeControls {
+        display: grid;
+        grid-template-columns: 0.25fr 1fr;
+        align-items: center;
+        justify-content: center;
+        align-content: center;
+        gap: 1em;
+      }
+
+      .volumeControls {
+        text-align: center;
       }
     </style>
   </head>
@@ -21,8 +197,22 @@
       <section id="masterControls">
         <button id="loadTracks" onclick="loadTracks()">Load Tracks</button>
 
-        <button id="playTracks" onclick="playTracks()" hidden>Play</button>
-        <button id="pauseTracks" onclick="pauseTracks()" hidden>Pause</button>
+        <button
+          id="playTracks"
+          class="controlButton"
+          onclick="playTracks()"
+          hidden
+        >
+          ▶
+        </button>
+        <button
+          id="pauseTracks"
+          class="controlButton"
+          onclick="pauseTracks()"
+          hidden
+        >
+          ⏸
+        </button>
         <input
           type="range"
           name="tracksCurrentTime"

@@ -20,20 +20,22 @@ function createTrackElement(track) {
     parentHTMLElement: htmlTrackElement,
   });
 
+  track.isMuted = false;
+
   htmlMuteButton.addEventListener('click', () => {
-    if (track.audioElement.muted) {
-      track.audioElement.muted = false;
+    if (track.isMuted) {
+      track.isMuted = false;
       track.gainNode.gain.value = track.volume;
       return;
     }
-    track.audioElement.muted = true;
+    track.isMuted = true;
     track.gainNode.gain.value = 0;
     return;
   });
 
   htmlVolumeInput.addEventListener('input', () => {
     track.volume = htmlVolumeInput.value;
-    if (!track.audioElement.muted) track.gainNode.gain.value = track.volume;
+    if (!track.isMuted) track.gainNode.gain.value = track.volume;
   });
 
   htmlTrackPannerElement.addEventListener('input', () => {
@@ -50,7 +52,7 @@ function createAudioElement(track) {
   audioElement.crossOrigin = 'anonymous';
 
   audioElement.setAttribute('src', filePath);
-  audioElement.setAttribute('controls', '');
+  //audioElement.setAttribute('controls', '');
   track.audioElement = audioElement;
   track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
     mediaElement: audioElement,
