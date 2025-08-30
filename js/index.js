@@ -7,6 +7,11 @@ const htmlTracksSection = document.getElementById('tracks');
 
 let audioCtx;
 
+const songInfo = {
+  name: 'Música 1',
+  duration: 0,
+};
+
 const tracks = [
   {
     id: 1,
@@ -38,16 +43,27 @@ function loadTracks() {
     audioCtx.suspend();
   }
 
-  for (track of tracks) {
+  for (const track of tracks) {
     createTrackElement(track);
     if (track.audioElement) {
-      track.audioElement.play();
+      track.audioElement.addEventListener('loadeddata', () => {
+        if (songInfo.duration < track.audioElement.duration)
+          songInfo.duration = track.audioElement.duration;
+
+        track.audioElement.play();
+      });
     }
   }
 
   tracksCurrentTime.hidden = false;
   playTracksButton.hidden = false;
   pauseTracksButton.hidden = false;
+}
+
+function updateAllTracksTime(time = 0) {
+  for (const track of tracks) {
+    track.audioElement = time;
+  }
 }
 
 function createAudioElement(track) {
