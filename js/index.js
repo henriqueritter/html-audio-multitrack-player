@@ -10,24 +10,26 @@ const htmlTracksSection = document.getElementById('tracks');
 
 let audioCtx;
 
-const songInfo = {
+let songInfo = {
   name: 'Música 1',
   currentTime: 0,
   duration: 0,
 };
 
-const tracks = [
-  {
-    id: 1,
-    name: 'Click',
-    filePath: 'assets/click.mp3',
-  },
-  {
-    id: 2,
-    name: 'Click2',
-    filePath: 'assets/click.mp3',
-  },
-];
+let tracks = [];
+
+window.onload = (event) => {
+  fetch(
+    'https://pub-2ee020cd36f344d7aa50a37abdbf165b.r2.dev/multitrack-quemeesse.json'
+  )
+    .then((response) => {
+      return response.json();
+    })
+    .then((json) => {
+      songInfo = json.data.songInfo;
+      tracks = json.data.tracks;
+    });
+};
 
 function playTracks() {
   if (!audioCtx) return;
@@ -41,6 +43,10 @@ function playTracks() {
 function pauseTracks() {
   if (!audioCtx) return;
   if (audioCtx.state != 'suspended') audioCtx.suspend();
+
+  for (const track of tracks) {
+    if (!track.audioElement.paused) track.audioElement.pause();
+  }
 }
 
 function loadTracks() {

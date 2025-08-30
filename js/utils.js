@@ -47,6 +47,8 @@ function createTrackElement(track) {
 function createAudioElement(track) {
   const { filePath } = track;
   const audioElement = document.createElement('audio');
+  audioElement.crossOrigin = 'anonymous';
+
   audioElement.setAttribute('src', filePath);
   audioElement.setAttribute('controls', '');
   track.audioElement = audioElement;
