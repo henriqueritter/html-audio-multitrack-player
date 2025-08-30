@@ -48,7 +48,7 @@ function createAudioElement(track) {
   const { filePath } = track;
   const audioElement = document.createElement('audio');
   audioElement.setAttribute('src', filePath);
-  audioElement.setAttribute('controls', '');
+  //audioElement.setAttribute('controls', '');
   track.audioElement = audioElement;
   track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
     mediaElement: audioElement,

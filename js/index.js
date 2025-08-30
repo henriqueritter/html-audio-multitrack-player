@@ -45,6 +45,7 @@ function pauseTracks() {
 
 function loadTracks() {
   loadTracksButton.disabled = true;
+  loadTracksButton.hidden = true;
   document.getElementById('songName').innerText = 'Loading...';
 
   if (!audioCtx) {
