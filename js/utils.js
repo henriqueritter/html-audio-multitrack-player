@@ -1,3 +1,73 @@
+function createTrackElement(track) {
+  const { id, name } = track;
+
+  const audioElement = createAudioElement(track);
+
+  const htmlTrackElement = document.createElement('div');
+  htmlTrackElement.setAttribute('id', id);
+  htmlTrackElement.setAttribute('class', 'track');
+
+  createHTMLTextElement(
+    { parentHTMLElement: htmlTrackElement },
+    { id, text: name, className: 'trackName' }
+  );
+
+  const { htmlMuteButton, htmlVolumeInput } = createTrackVolumeControls({
+    parentHTMLElement: htmlTrackElement,
+  });
+
+  const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
+    parentHTMLElement: htmlTrackElement,
+  });
+
+  htmlMuteButton.addEventListener('click', () => {
+    if (track.audioElement.muted) {
+      track.audioElement.muted = false;
+      track.gainNode.gain.value = track.volume;
+      return;
+    }
+    track.audioElement.muted = true;
+    track.gainNode.gain.value = 0;
+    return;
+  });
+
+  htmlVolumeInput.addEventListener('input', () => {
+    track.volume = htmlVolumeInput.value;
+    if (!track.audioElement.muted) track.gainNode.gain.value = track.volume;
+  });
+
+  htmlTrackPannerElement.addEventListener('input', () => {
+    track.pannerNode.pan.value = htmlTrackPannerElement.value;
+  });
+
+  htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
+  htmlTracksSection.insertAdjacentElement('beforeend', htmlTrackElement);
+}
+
+function createAudioElement(track) {
+  const { filePath } = track;
+  const audioElement = document.createElement('audio');
+  audioElement.setAttribute('src', filePath);
+  audioElement.setAttribute('controls', '');
+  track.audioElement = audioElement;
+  track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
+    mediaElement: audioElement,
+  });
+
+  track.volume = 1;
+  track.gainNode = new GainNode(audioCtx);
+  track.gainNode.gain.value = track.volume;
+
+  track.pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
+
+  track.mediaElement
+    .connect(track.gainNode)
+    .connect(track.pannerNode)
+    .connect(audioCtx.destination);
+
+  return audioElement;
+}
+
 function createTrackAudioModifiersControls({
   parentHTMLElement,
   position = 'beforeend',

@@ -1,4 +1,7 @@
 const tracksCurrentTime = document.getElementById('tracksCurrentTime');
+const tracksCurrentTimeLabel = document.getElementById(
+  'tracksCurrentTimeLabel'
+);
 const loadTracksButton = document.getElementById('loadTracks');
 const playTracksButton = document.getElementById('playTracks');
 const pauseTracksButton = document.getElementById('pauseTracks');
@@ -9,6 +12,7 @@ let audioCtx;
 
 const songInfo = {
   name: 'Música 1',
+  currentTime: 0,
   duration: 0,
 };
 
@@ -28,6 +32,10 @@ const tracks = [
 function playTracks() {
   if (!audioCtx) return;
   if (audioCtx.state != 'running') audioCtx.resume();
+
+  for (const track of tracks) {
+    if (track.audioElement.paused) track.audioElement.play();
+  }
 }
 
 function pauseTracks() {
@@ -37,6 +45,7 @@ function pauseTracks() {
 
 function loadTracks() {
   loadTracksButton.disabled = true;
+  document.getElementById('songName').innerText = 'Loading...';
 
   if (!audioCtx) {
     audioCtx = new AudioContext();
@@ -47,91 +56,43 @@ function loadTracks() {
     createTrackElement(track);
     if (track.audioElement) {
       track.audioElement.addEventListener('loadeddata', () => {
-        if (songInfo.duration < track.audioElement.duration)
-          songInfo.duration = track.audioElement.duration;
+        if (songInfo.duration < track.audioElement.duration) {
+          songInfo.duration = track.audioElement.duration.toFixed(2);
 
+          tracksCurrentTime.setAttribute('max', songInfo.duration);
+          document.getElementById('tracksTotalDuration').innerText =
+            songInfo.duration;
+        }
         track.audioElement.play();
       });
     }
   }
 
+  tracks[0].audioElement.addEventListener('timeupdate', () => {
+    songInfo.currentTime = tracks[0].audioElement.currentTime.toFixed(2);
+
+    tracksCurrentTimeLabel.innerText = songInfo.currentTime;
+    tracksCurrentTime.value = songInfo.currentTime;
+  });
+
+  tracksCurrentTime.addEventListener('input', () => {
+    songInfo.currentTime = tracksCurrentTime.value;
+    updateAllTracksTime(songInfo.currentTime);
+  });
+
   tracksCurrentTime.hidden = false;
   playTracksButton.hidden = false;
   pauseTracksButton.hidden = false;
+  document.getElementById('songName').innerText = songInfo.name;
 }
 
 function updateAllTracksTime(time = 0) {
+  if (time > songInfo.duration || time < 0) return;
+
+  tracksCurrentTimeLabel.innerText = songInfo.currentTime;
+  tracksCurrentTime.value = songInfo.currentTime;
+
   for (const track of tracks) {
-    track.audioElement = time;
+    track.audioElement.currentTime = songInfo.currentTime;
   }
-}
-
-function createAudioElement(track) {
-  const { filePath } = track;
-  const audioElement = document.createElement('audio');
-  audioElement.setAttribute('src', filePath);
-  audioElement.setAttribute('controls', '');
-  track.audioElement = audioElement;
-  track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
-    mediaElement: audioElement,
-  });
-
-  track.volume = 1;
-  track.gainNode = new GainNode(audioCtx);
-  track.gainNode.gain.value = track.volume;
-
-  track.pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
-
-  track.mediaElement
-    .connect(track.gainNode)
-    .connect(track.pannerNode)
-    .connect(audioCtx.destination);
-
-  return audioElement;
-}
-
-function createTrackElement(track) {
-  const { id, name } = track;
-
-  const audioElement = createAudioElement(track);
-
-  const htmlTrackElement = document.createElement('div');
-  htmlTrackElement.setAttribute('id', id);
-  htmlTrackElement.setAttribute('class', 'track');
-
-  createHTMLTextElement(
-    { parentHTMLElement: htmlTrackElement },
-    { id, text: name, className: 'trackName' }
-  );
-
-  const { htmlMuteButton, htmlVolumeInput } = createTrackVolumeControls({
-    parentHTMLElement: htmlTrackElement,
-  });
-
-  const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
-    parentHTMLElement: htmlTrackElement,
-  });
-
-  htmlMuteButton.addEventListener('click', () => {
-    if (track.audioElement.muted) {
-      track.audioElement.muted = false;
-      track.gainNode.gain.value = track.volume;
-      return;
-    }
-    track.audioElement.muted = true;
-    track.gainNode.gain.value = 0;
-    return;
-  });
-
-  htmlVolumeInput.addEventListener('input', () => {
-    track.volume = htmlVolumeInput.value;
-    if (!track.audioElement.muted) track.gainNode.gain.value = track.volume;
-  });
-
-  htmlTrackPannerElement.addEventListener('input', () => {
-    track.pannerNode.pan.value = htmlTrackPannerElement.value;
-  });
-
-  htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
-  htmlTracksSection.insertAdjacentElement('beforeend', htmlTrackElement);
 }
