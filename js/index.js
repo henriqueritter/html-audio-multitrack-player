@@ -4,31 +4,70 @@ const pauseTracksButton = document.getElementById('pauseTracks');
 
 const htmlTracksSection = document.getElementById('tracks');
 
+let audioCtx;
+
+const tracks = [
+  {
+    id: 1,
+    name: 'Click',
+    filePath: 'assets/click.mp3',
+  },
+];
+
 function loadTracks() {
-  createTrackElement({ id: 1, name: 'test', path: './test.mp3' });
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+  }
+  for (track of tracks) {
+    createTrackElement(track);
+  }
 }
 
-function createTrackElement({ id, name, path }) {
+function createAudioElement(track) {
+  const { filePath } = track;
+  const audioElement = document.createElement('audio');
+  audioElement.setAttribute('src', filePath);
+  audioElement.setAttribute('controls', '');
+  track.audioElement = audioElement;
+  track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
+    mediaElement: audioElement,
+  });
+
+  track.volume = 1;
+  track.gainNode = new GainNode(audioCtx);
+  track.gainNode.gain.value = track.volume;
+
+  track.mediaElement.connect(track.gainNode).connect(audioCtx.destination);
+
+  return audioElement;
+}
+
+function createTrackElement(track) {
+  const { id, name, filePath } = track;
+
+  const audioElement = createAudioElement(track);
+
   const htmlTrackElement = document.createElement('div');
   htmlTrackElement.setAttribute('id', id);
   htmlTrackElement.setAttribute('class', 'track');
 
   createHTMLTextElement(
     { parentHTMLElement: htmlTrackElement },
-    { id: 1, text: 'Track 1', className: 'trackName' }
+    { id, text: name, className: 'trackName' }
   );
 
   const { htmlMuteButton, htmlVolumeInput } = createTrackVolumeControls({
     parentHTMLElement: htmlTrackElement,
   });
 
-  htmlMuteButton.addEventListener('click', () => {
-    console.log('aa');
+  htmlVolumeInput.addEventListener('input', () => {
+    console.log(htmlVolumeInput.value);
   });
 
-  const { a } = createTrackAudioModifiersControls({
+  const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
     parentHTMLElement: htmlTrackElement,
   });
 
+  htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
   htmlTracksSection.insertAdjacentElement('beforeend', htmlTrackElement);
 }
