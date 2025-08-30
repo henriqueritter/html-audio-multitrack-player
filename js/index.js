@@ -1,4 +1,5 @@
 const tracksCurrentTime = document.getElementById('tracksCurrentTime');
+const loadTracksButton = document.getElementById('loadTracks');
 const playTracksButton = document.getElementById('playTracks');
 const pauseTracksButton = document.getElementById('pauseTracks');
 
@@ -12,16 +13,41 @@ const tracks = [
     name: 'Click',
     filePath: 'assets/click.mp3',
   },
+  {
+    id: 2,
+    name: 'Click2',
+    filePath: 'assets/click.mp3',
+  },
 ];
 
+function playTracks() {
+  if (!audioCtx) return;
+  if (audioCtx.state != 'running') audioCtx.resume();
+}
+
+function pauseTracks() {
+  if (!audioCtx) return;
+  if (audioCtx.state != 'suspended') audioCtx.suspend();
+}
+
 function loadTracks() {
+  loadTracksButton.disabled = true;
+
   if (!audioCtx) {
     audioCtx = new AudioContext();
     audioCtx.suspend();
   }
+
   for (track of tracks) {
     createTrackElement(track);
+    if (track.audioElement) {
+      track.audioElement.play();
+    }
   }
+
+  tracksCurrentTime.hidden = false;
+  playTracksButton.hidden = false;
+  pauseTracksButton.hidden = false;
 }
 
 function createAudioElement(track) {
@@ -40,7 +66,6 @@ function createAudioElement(track) {
 
   track.mediaElement.connect(track.gainNode).connect(audioCtx.destination);
 
-  track.audioElement.play();
   return audioElement;
 }
 
