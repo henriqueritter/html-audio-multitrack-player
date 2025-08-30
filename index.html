@@ -24,8 +24,8 @@
         <button id="pauseTracks" onclick="pauseTracks()" hidden>Pause</button>
         <input
           type="range"
-          name="songCurrentTime"
-          id="songCurrentTime"
+          name="tracksCurrentTime"
+          id="tracksCurrentTime"
           min="0"
           max="0"
           hidden
@@ -37,12 +37,12 @@
           <span>Track 1</span>
           <div class="volumeControls">
             <button id="mute">Mute</button>
-            <input type="range" name="volume" class="trackVolume" />
+            <input type="range" name="volume" class="trackVolume" step="0.01" />
           </div>
 
           <div class="audioModifiers">
             <span>L</span>
-            <input type="range" name="panner" class="trackPanner" />
+            <input type="range" name="panner" class="trackPanner" step="0.01" />
             <span>R</span>
           </div>
 
@@ -50,6 +50,7 @@
         </div>
       </section>
     </main>
-    <script src="index.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/index.js"></script>
   </body>
 </html>
