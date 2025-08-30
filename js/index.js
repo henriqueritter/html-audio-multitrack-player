@@ -17,6 +17,7 @@ const tracks = [
 function loadTracks() {
   if (!audioCtx) {
     audioCtx = new AudioContext();
+    audioCtx.suspend();
   }
   for (track of tracks) {
     createTrackElement(track);
@@ -39,6 +40,7 @@ function createAudioElement(track) {
 
   track.mediaElement.connect(track.gainNode).connect(audioCtx.destination);
 
+  track.audioElement.play();
   return audioElement;
 }
 
@@ -60,8 +62,20 @@ function createTrackElement(track) {
     parentHTMLElement: htmlTrackElement,
   });
 
+  htmlMuteButton.addEventListener('click', () => {
+    if (track.audioElement.muted) {
+      track.audioElement.muted = false;
+      track.gainNode.gain.value = track.volume;
+      return;
+    }
+    track.audioElement.muted = true;
+    track.gainNode.gain.value = 0;
+    return;
+  });
+
   htmlVolumeInput.addEventListener('input', () => {
-    console.log(htmlVolumeInput.value);
+    track.volume = htmlVolumeInput.value;
+    if (!track.audioElement.muted) track.gainNode.gain.value = track.volume;
   });
 
   const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
