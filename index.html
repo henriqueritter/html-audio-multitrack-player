@@ -17,6 +17,7 @@
 
         --color-mute: #ea0400;
         --color-mute-fade: #8a0200;
+        --color-mute-active: #c71c19;
       }
 
       * {
@@ -136,11 +137,13 @@
       .volumeControls {
         display: flex;
         justify-content: flex-start;
+        align-items: center;
       }
 
       .muteButton {
         width: 4em;
-        background-color: var(--color-mute);
+        height: 1.75em;
+        background-color: var(--color-text-faded);
         color: var(--color-text);
         border: none;
         padding: 0.24em 0.64em;
@@ -150,9 +153,32 @@
         border-radius: 4px;
         cursor: pointer;
         transition: 0.16s;
+        text-align: center;
+      }
+
+      .muteButton-active {
+        width: 4em;
+        height: 1.75em;
+        background-color: var(--color-mute-active);
+        color: var(--color-text);
+        border: none;
+        padding: 0.24em 0.64em;
+        margin: 0 0.5em;
+        font-size: 1em;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.16s;
+        text-align: center;
       }
 
       .muteButton:hover {
+        box-shadow: 0 0 4px var(--color-mute-fade),
+          0 0 4px var(--color-text-faded);
+        background-color: var(--color-mute);
+      }
+
+      .muteButton-active:hover {
         box-shadow: 0 0 4px var(--color-mute-fade),
           0 0 4px var(--color-text-faded);
         background-color: var(--color-mute-fade);
@@ -202,6 +228,36 @@
           <span id="1" class="trackName">Guitarra</span>
           <div class="volumeControls">
             <button id="mute" class="muteButton">Mute</button
+            ><input
+              id="volume"
+              name="volume"
+              class="trackVolume"
+              type="range"
+              step="0.01"
+              min="0"
+              max="1.5"
+              value="1"
+            />
+          </div>
+          <div class="audioModifiers">
+            <label>L</label
+            ><input
+              id="panner"
+              name="panner"
+              class="trackPanner"
+              type="range"
+              step="0.01"
+              min="-1"
+              max="1"
+              value="0"
+            /><label>R</label>
+          </div>
+          <audio src="assets/click.mp3"></audio>
+        </div>
+        <div id="1" class="track">
+          <span id="1" class="trackName">Guitarra</span>
+          <div class="volumeControls">
+            <button id="mute" class="muteButton-active">Mute</button
             ><input
               id="volume"
               name="volume"

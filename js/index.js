@@ -20,11 +20,13 @@ const tracks = [
   {
     id: 1,
     name: 'Click',
+    isMuted: false,
     filePath: 'assets/click.mp3',
   },
   {
     id: 2,
     name: 'Click2',
+    isMuted: false,
     filePath: 'assets/click.mp3',
   },
 ];
