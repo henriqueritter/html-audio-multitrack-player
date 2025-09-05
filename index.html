@@ -49,9 +49,10 @@
         background-color: var(--color-bg);
         margin-top: 1em;
         display: grid;
+        height: 80dvh;
         width: 100%;
         align-items: center;
-        align-content: center;
+        align-content: start;
         justify-content: center;
       }
 
@@ -129,9 +130,10 @@
       }
 
       .trackName {
+        font-weight: bold;
         font-size: large;
         min-width: 8em;
-        font-weight: 500;
+        text-align: left;
       }
 
       .volumeControls {
@@ -223,69 +225,9 @@
         <span id="tracksTotalDuration">0:00</span>
       </section>
 
-      <section id="tracks">
-        <div id="1" class="track">
-          <span id="1" class="trackName">Guitarra</span>
-          <div class="volumeControls">
-            <button id="mute" class="muteButton">Mute</button
-            ><input
-              id="volume"
-              name="volume"
-              class="trackVolume"
-              type="range"
-              step="0.01"
-              min="0"
-              max="1.5"
-              value="1"
-            />
-          </div>
-          <div class="audioModifiers">
-            <label>L</label
-            ><input
-              id="panner"
-              name="panner"
-              class="trackPanner"
-              type="range"
-              step="0.01"
-              min="-1"
-              max="1"
-              value="0"
-            /><label>R</label>
-          </div>
-          <audio src="assets/click.mp3"></audio>
-        </div>
-        <div id="1" class="track">
-          <span id="1" class="trackName">Guitarra</span>
-          <div class="volumeControls">
-            <button id="mute" class="muteButton-active">Mute</button
-            ><input
-              id="volume"
-              name="volume"
-              class="trackVolume"
-              type="range"
-              step="0.01"
-              min="0"
-              max="1.5"
-              value="1"
-            />
-          </div>
-          <div class="audioModifiers">
-            <label>L</label
-            ><input
-              id="panner"
-              name="panner"
-              class="trackPanner"
-              type="range"
-              step="0.01"
-              min="-1"
-              max="1"
-              value="0"
-            /><label>R</label>
-          </div>
-          <audio src="assets/click.mp3"></audio>
-        </div>
-      </section>
+      <section id="tracks"></section>
     </main>
+
     <script src="js/utils.js"></script>
     <script src="js/index.js"></script>
   </body>
