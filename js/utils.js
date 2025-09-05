@@ -21,19 +21,21 @@ function createTrackElement(track) {
   });
 
   htmlMuteButton.addEventListener('click', () => {
-    if (track.audioElement.muted) {
-      track.audioElement.muted = false;
+    if (track.audioElement.isMuted) {
+      htmlMuteButton.setAttribute('class', 'muteButton');
+      track.audioElement.isMuted = false;
       track.gainNode.gain.value = track.volume;
       return;
     }
-    track.audioElement.muted = true;
+    htmlMuteButton.setAttribute('class', 'muteButton-active');
+    track.audioElement.isMuted = true;
     track.gainNode.gain.value = 0;
     return;
   });
 
   htmlVolumeInput.addEventListener('input', () => {
     track.volume = htmlVolumeInput.value;
-    if (!track.audioElement.muted) track.gainNode.gain.value = track.volume;
+    if (!track.audioElement.isMuted) track.gainNode.gain.value = track.volume;
   });
 
   htmlTrackPannerElement.addEventListener('input', () => {
@@ -48,7 +50,7 @@ function createAudioElement(track) {
   const { filePath } = track;
   const audioElement = document.createElement('audio');
   audioElement.setAttribute('src', filePath);
-  audioElement.setAttribute('controls', '');
+  //audioElement.setAttribute('controls', '');
   track.audioElement = audioElement;
   track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
     mediaElement: audioElement,

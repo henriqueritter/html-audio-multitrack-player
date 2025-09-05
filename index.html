@@ -5,24 +5,213 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Multitrack Player - Henrique Ritter</title>
     <style>
+      :root {
+        --color-bg: #6998c1;
+
+        --color-primary: #0091b9;
+        --color-primary-dark: #004e94;
+        --color-primary-light: #bae4fd;
+        --color-highlight: #ffa039;
+        --color-text: #f9f3ee;
+        --color-text-faded: #aaa;
+
+        --color-mute: #ea0400;
+        --color-mute-fade: #8a0200;
+        --color-mute-active: #c71c19;
+      }
+
+      * {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--color-text);
+      }
       html,
       body {
-        background-color: rgb(158, 188, 189);
+        background: var(--color-bg);
+      }
+
+      header {
+        padding: 0.5em 0;
+        background: var(--color-primary-dark);
+        display: grid;
+        width: 100%;
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+        color: var(--color-text);
+      }
+
+      header span {
+        color: var(--color-highlight);
+      }
+
+      main {
+        background-color: var(--color-bg);
+        margin-top: 1em;
+        display: grid;
+        height: 80dvh;
+        width: 100%;
+        align-items: center;
+        align-content: start;
+        justify-content: center;
+      }
+
+      #masterControls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        align-content: center;
+      }
+
+      #masterControls button {
+        background-color: var(--color-primary-dark);
+        min-width: 3em;
+        color: white;
+        border: none;
+        padding: 0.24em 0.64em;
+        font-size: 1em;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.16s;
+        text-align: center;
+        align-content: center;
+      }
+
+      #masterControls button:hover {
+        transform: scale(1.02);
+      }
+
+      #tracksCurrentTime {
+        -webkit-appearance: none;
+        width: 28em;
+        height: 0.9em;
+        margin: 0 1em;
+        border-radius: 6px;
+        background: #ddd;
+        overflow: hidden;
+      }
+      #tracksCurrentTime::-webkit-slider-runnable-track {
+        height: 1em;
+        background: transparent;
+      }
+      #tracksCurrentTime::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 0;
+        height: 1em;
+        box-shadow: -30em 0 0 30em var(--color-primary-dark);
+        cursor: pointer;
+      }
+
+      #masterControls span {
+        color: aliceblue;
+        padding: 0.25em 0.5em;
+        border-radius: 4px;
+        background-color: var(--color-primary-dark);
+      }
+
+      #tracks {
+        margin-top: 1em;
+      }
+
+      .track {
+        width: 38em;
+        display: flex;
+        padding: 1em 0 1em 1em;
+        grid-template-columns: 1fr 2fr 2fr;
+        background-color: var(--color-primary-dark);
+        border-radius: 8px;
+        color: aliceblue;
+        font-weight: 500;
+        justify-content: start;
+        align-items: center;
+        align-content: center;
+        margin-bottom: 1em;
+      }
+
+      .trackName {
+        font-weight: bold;
+        font-size: large;
+        min-width: 8em;
+        text-align: left;
+      }
+
+      .volumeControls {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+      }
+
+      .muteButton {
+        width: 4em;
+        height: 1.75em;
+        background-color: var(--color-text-faded);
+        color: var(--color-text);
+        border: none;
+        padding: 0.24em 0.64em;
+        margin: 0 0.5em;
+        font-size: 1em;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.16s;
+        text-align: center;
+      }
+
+      .muteButton-active {
+        width: 4em;
+        height: 1.75em;
+        background-color: var(--color-mute-active);
+        color: var(--color-text);
+        border: none;
+        padding: 0.24em 0.64em;
+        margin: 0 0.5em;
+        font-size: 1em;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.16s;
+        text-align: center;
+      }
+
+      .muteButton:hover {
+        box-shadow: 0 0 4px var(--color-mute-fade),
+          0 0 4px var(--color-text-faded);
+        background-color: var(--color-mute);
+      }
+
+      .muteButton-active:hover {
+        box-shadow: 0 0 4px var(--color-mute-fade),
+          0 0 4px var(--color-text-faded);
+        background-color: var(--color-mute-fade);
+      }
+
+      .audioModifiers {
+        padding: 0 2em;
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+
+      .trackPanner {
+        margin: 0 0.75em;
       }
     </style>
   </head>
   <body>
     <header>
-      <h2>Audio Multitrack Player</h2>
-      <span id="songName"></span>
+      <h1>Audio Multitrack Player</h1>
+      <span id="songName">Musica 1</span>
     </header>
 
     <main>
       <section id="masterControls">
         <button id="loadTracks" onclick="loadTracks()">Load Tracks</button>
 
-        <button id="playTracks" onclick="playTracks()" hidden>Play</button>
-        <button id="pauseTracks" onclick="pauseTracks()" hidden>Pause</button>
+        <button id="playTracks" onclick="playTracks()" hidden>►</button>
+        <button id="pauseTracks" onclick="pauseTracks()" hidden>||</button>
         <input
           type="range"
           name="tracksCurrentTime"
@@ -31,7 +220,6 @@
           value="0"
           max="0"
           step="0.01"
-          hidden
         />
         <span id="tracksCurrentTimeLabel">0:00</span> -
         <span id="tracksTotalDuration">0:00</span>
@@ -39,6 +227,7 @@
 
       <section id="tracks"></section>
     </main>
+
     <script src="js/utils.js"></script>
     <script src="js/index.js"></script>
   </body>
