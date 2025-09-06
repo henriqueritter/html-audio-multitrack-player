@@ -27,9 +27,12 @@ const tracks = [
     id: 2,
     name: 'Click2',
     isMuted: false,
+    volume: 0,
     filePath: 'assets/click.mp3',
   },
 ];
+
+//https://pub-2ee020cd36f344d7aa50a37abdbf165b.r2.dev/Click.mp3
 
 function playTracks() {
   if (!audioCtx) return;
@@ -44,6 +47,19 @@ function pauseTracks() {
   if (!audioCtx) return;
   if (audioCtx.state != 'suspended') audioCtx.suspend();
 }
+//------
+async function getAudioBufferFromFilePath(filepath) {
+  const response = await fetch(filepath);
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  return audioBuffer;
+}
+
+async function loadAudioTrackFromFilePath(filePath) {
+  const trackBuffer = await getAudioBufferFromFilePath(filePath);
+  return trackBuffer;
+}
+//---
 
 function loadTracks() {
   loadTracksButton.disabled = true;
@@ -56,27 +72,34 @@ function loadTracks() {
   }
 
   for (const track of tracks) {
-    createTrackElement(track);
-    if (track.audioElement) {
-      track.audioElement.addEventListener('loadeddata', () => {
-        if (songInfo.duration < track.audioElement.duration) {
-          songInfo.duration = track.audioElement.duration.toFixed(2);
+    loadAudioTrackFromFilePath(track.filePath).then((trackBuffer) => {
+      track.audioBuffer = trackBuffer;
 
-          tracksCurrentTime.setAttribute('max', songInfo.duration);
-          document.getElementById('tracksTotalDuration').innerText =
-            songInfo.duration;
-        }
-        track.audioElement.play();
-      });
-    }
+      createTrackElement(track);
+
+      if (track.audioElement) {
+        track.audioElement.addEventListener('loadeddata', () => {
+          if (songInfo.duration < track.audioElement.duration) {
+            songInfo.duration = track.audioElement.duration.toFixed(2);
+
+            tracksCurrentTime.setAttribute('max', songInfo.duration);
+            document.getElementById('tracksTotalDuration').innerText =
+              songInfo.duration;
+          }
+          track.audioElement.play();
+        });
+      }
+    });
   }
 
-  tracks[0].audioElement.addEventListener('timeupdate', () => {
-    songInfo.currentTime = tracks[0].audioElement.currentTime.toFixed(2);
+  /*
+  tracks[0].mediaElement.addEventListener('timeupdate', () => {
+    songInfo.currentTime = tracks[0].mediaElement.audioBuffer.toFixed(2);
 
     tracksCurrentTimeLabel.innerText = songInfo.currentTime;
     tracksCurrentTime.value = songInfo.currentTime;
   });
+  */
 
   tracksCurrentTime.addEventListener('input', () => {
     songInfo.currentTime = tracksCurrentTime.value;

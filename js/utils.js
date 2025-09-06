@@ -1,24 +1,34 @@
 function createTrackElement(track) {
   const { id, name } = track;
 
+  track.isMuted = false;
+
   const audioElement = createAudioElement(track);
 
   const htmlTrackElement = document.createElement('div');
   htmlTrackElement.setAttribute('id', id);
   htmlTrackElement.setAttribute('class', 'track');
 
-  createHTMLTextElement(
-    { parentHTMLElement: htmlTrackElement },
-    { id, text: name, className: 'trackName' }
+  htmlTrackElement.insertAdjacentElement(
+    'beforeend',
+    createHTMLTextElement({ id, text: name, className: 'trackName' })
   );
 
-  const { htmlMuteButton, htmlVolumeInput } = createTrackVolumeControls({
-    parentHTMLElement: htmlTrackElement,
-  });
+  const { htmlTrackVolumeControlsElement, htmlMuteButton, htmlVolumeInput } =
+    createTrackVolumeControls();
 
-  const { htmlTrackPannerElement } = createTrackAudioModifiersControls({
-    parentHTMLElement: htmlTrackElement,
-  });
+  htmlTrackElement.insertAdjacentElement(
+    'beforeend',
+    htmlTrackVolumeControlsElement
+  );
+
+  const { htmlTrackPannerElement, htmlTrackAudioModifiersControlsElement } =
+    createTrackAudioModifiersControls();
+
+  htmlTrackElement.insertAdjacentElement(
+    'beforeend',
+    htmlTrackAudioModifiersControlsElement
+  );
 
   htmlMuteButton.addEventListener('click', () => {
     if (track.audioElement.isMuted) {
@@ -49,11 +59,12 @@ function createTrackElement(track) {
 function createAudioElement(track) {
   const { filePath } = track;
   const audioElement = document.createElement('audio');
-  audioElement.setAttribute('src', filePath);
+  //audioElement.setAttribute('src', filePath);
   //audioElement.setAttribute('controls', '');
   track.audioElement = audioElement;
-  track.mediaElement = new MediaElementAudioSourceNode(audioCtx, {
-    mediaElement: audioElement,
+
+  track.mediaElement = new AudioBufferSourceNode(audioCtx, {
+    buffer: track.audioBuffer,
   });
 
   track.volume = 1;
@@ -70,107 +81,110 @@ function createAudioElement(track) {
   return audioElement;
 }
 
-function createTrackAudioModifiersControls({
-  parentHTMLElement,
-  position = 'beforeend',
-}) {
+function createTrackAudioModifiersControls() {
   const htmlTrackAudioModifiersControlsElement = document.createElement('div');
   htmlTrackAudioModifiersControlsElement.setAttribute(
     'class',
     'audioModifiers'
   );
 
-  createHTMLTextElement(
-    {
-      parentHTMLElement: htmlTrackAudioModifiersControlsElement,
+  htmlTrackAudioModifiersControlsElement.insertAdjacentElement(
+    'beforeend',
+    createHTMLTextElement({
       HTMLElementType: 'label',
-    },
-    {
       text: 'L',
-    }
+    })
   );
-  const htmlTrackPannerElement = document.createElement('input');
-  htmlTrackPannerElement.setAttribute('id', 'panner');
-  htmlTrackPannerElement.setAttribute('name', 'panner');
-  htmlTrackPannerElement.setAttribute('class', 'trackPanner');
-  htmlTrackPannerElement.setAttribute('type', 'range');
-  htmlTrackPannerElement.setAttribute('step', '0.01');
-  htmlTrackPannerElement.setAttribute('min', '-1');
-  htmlTrackPannerElement.setAttribute('max', '1');
-  htmlTrackPannerElement.setAttribute('value', '0');
+
+  const htmlTrackPannerElement = createTrackFaderInputRange({
+    className: 'trackPanner',
+    step: '0.01',
+    min: '-1',
+    max: '1',
+    initialValue: '0',
+  });
 
   htmlTrackAudioModifiersControlsElement.insertAdjacentElement(
     'beforeend',
     htmlTrackPannerElement
   );
 
-  createHTMLTextElement(
-    {
-      parentHTMLElement: htmlTrackAudioModifiersControlsElement,
+  htmlTrackAudioModifiersControlsElement.insertAdjacentElement(
+    'beforeend',
+    createHTMLTextElement({
       HTMLElementType: 'label',
-    },
-    {
       text: 'R',
-    }
+    })
   );
 
-  parentHTMLElement.insertAdjacentElement(
-    position,
-    htmlTrackAudioModifiersControlsElement
-  );
-
-  return { htmlTrackPannerElement };
+  return { htmlTrackPannerElement, htmlTrackAudioModifiersControlsElement };
 }
 
-function createTrackVolumeControls({
-  parentHTMLElement,
-  position = 'beforeend',
-}) {
+function createTrackVolumeControls() {
   const htmlTrackVolumeControlsElement = document.createElement('div');
   htmlTrackVolumeControlsElement.setAttribute('class', 'volumeControls');
 
-  const htmlMuteButton = document.createElement('button');
-  htmlMuteButton.setAttribute('id', 'mute');
-  htmlMuteButton.setAttribute('class', 'muteButton');
-  htmlMuteButton.innerText = 'Mute';
+  const htmlMuteButton = createTrackMuteButton();
 
   htmlTrackVolumeControlsElement.insertAdjacentElement(
     'beforeend',
     htmlMuteButton
   );
 
-  const htmlVolumeInput = document.createElement('input');
-  htmlVolumeInput.setAttribute('id', 'volume');
-  htmlVolumeInput.setAttribute('name', 'volume');
-  htmlVolumeInput.setAttribute('class', 'trackVolume');
-  htmlVolumeInput.setAttribute('type', 'range');
-  htmlVolumeInput.setAttribute('step', '0.01');
-  htmlVolumeInput.setAttribute('min', '0');
-  htmlVolumeInput.setAttribute('max', '1.5');
-  htmlVolumeInput.setAttribute('value', '1');
+  const htmlVolumeInput = createTrackFaderInputRange({
+    className: 'trackVolume',
+    step: '0.01',
+    min: '0',
+    max: '1.5',
+    initialValue: '1',
+  });
 
   htmlTrackVolumeControlsElement.insertAdjacentElement(
     'beforeend',
     htmlVolumeInput
   );
 
-  parentHTMLElement.insertAdjacentElement(
-    position,
-    htmlTrackVolumeControlsElement
-  );
-
-  return { htmlMuteButton, htmlVolumeInput };
+  return { htmlTrackVolumeControlsElement, htmlMuteButton, htmlVolumeInput };
 }
 
-function createHTMLTextElement(
-  { HTMLElementType = 'span', parentHTMLElement, position = 'beforeend' },
-  { id = '', text, className = '' }
-) {
-  const spanElement = document.createElement(HTMLElementType);
+function createHTMLTextElement({
+  HTMLElementType = 'span',
+  id = '',
+  text,
+  className = '',
+}) {
+  const htmlTextElement = document.createElement(HTMLElementType);
 
-  if (id) spanElement.setAttribute('id', id);
-  if (className) spanElement.setAttribute('class', className);
-  if (text) spanElement.innerText = text;
+  if (id) htmlTextElement.setAttribute('id', id);
+  if (className) htmlTextElement.setAttribute('class', className);
+  if (text) htmlTextElement.innerText = text;
 
-  parentHTMLElement.insertAdjacentElement(position, spanElement);
+  return htmlTextElement;
+}
+
+function createTrackFaderInputRange({
+  className = 'trackVolume',
+  step = '0.01',
+  min = '0',
+  max = '1.5',
+  initialValue = '1',
+}) {
+  const htmlTrackFader = document.createElement('input');
+  htmlTrackFader.setAttribute('class', className);
+  htmlTrackFader.setAttribute('type', 'range');
+  htmlTrackFader.setAttribute('step', step);
+  htmlTrackFader.setAttribute('min', min);
+  htmlTrackFader.setAttribute('max', max);
+  htmlTrackFader.setAttribute('value', initialValue);
+
+  return htmlTrackFader;
+}
+
+function createTrackMuteButton() {
+  const htmlMuteButton = document.createElement('button');
+  htmlMuteButton.setAttribute('id', 'mute');
+  htmlMuteButton.setAttribute('class', 'muteButton');
+  htmlMuteButton.innerText = 'Mute';
+
+  return htmlMuteButton;
 }
