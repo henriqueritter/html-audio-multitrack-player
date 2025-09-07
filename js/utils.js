@@ -1,9 +1,14 @@
 function createTrackElement(track) {
   const { id, name } = track;
 
-  track.isMuted = false;
+  createAudioElement(track);
 
-  const audioElement = createAudioElement(track);
+  if (!track.audioBuffer) console.warn('Audio Buffer may not be initialized.');
+  track.isMuted = false;
+  track.startAt = 0;
+  track.pausedAt = 0;
+  track.isPlaying = false;
+  track.duration = track.audioBuffer.duration.toFixed(2);
 
   const htmlTrackElement = document.createElement('div');
   htmlTrackElement.setAttribute('id', id);
@@ -31,37 +36,37 @@ function createTrackElement(track) {
   );
 
   htmlMuteButton.addEventListener('click', () => {
-    if (track.audioElement.isMuted) {
+    if (track.isMuted) {
       htmlMuteButton.setAttribute('class', 'muteButton');
-      track.audioElement.isMuted = false;
+      track.isMuted = false;
       track.gainNode.gain.value = track.volume;
       return;
     }
     htmlMuteButton.setAttribute('class', 'muteButton-active');
-    track.audioElement.isMuted = true;
+    track.isMuted = true;
     track.gainNode.gain.value = 0;
     return;
   });
 
   htmlVolumeInput.addEventListener('input', () => {
     track.volume = htmlVolumeInput.value;
-    if (!track.audioElement.isMuted) track.gainNode.gain.value = track.volume;
+    if (!track.isMuted) track.gainNode.gain.value = track.volume;
   });
 
   htmlTrackPannerElement.addEventListener('input', () => {
     track.pannerNode.pan.value = htmlTrackPannerElement.value;
   });
 
-  htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
+  //htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
   htmlTracksSection.insertAdjacentElement('beforeend', htmlTrackElement);
 }
 
 function createAudioElement(track) {
-  const { filePath } = track;
-  const audioElement = document.createElement('audio');
+  //const { filePath } = track;
+  //const audioElement = document.createElement('audio');
   //audioElement.setAttribute('src', filePath);
   //audioElement.setAttribute('controls', '');
-  track.audioElement = audioElement;
+  //track.audioElement = audioElement;
 
   track.mediaElement = new AudioBufferSourceNode(audioCtx, {
     buffer: track.audioBuffer,
@@ -78,7 +83,8 @@ function createAudioElement(track) {
     .connect(track.pannerNode)
     .connect(audioCtx.destination);
 
-  return audioElement;
+  //return audioElement;
+  return true;
 }
 
 function createTrackAudioModifiersControls() {
