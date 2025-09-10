@@ -37,13 +37,12 @@ let tracks = [
   },
 ];
 
-/*
 window.onload = () => {
   getSongAndTracksData().then((data) => {
     songInfo = data.songInfo;
     tracks = data.tracks;
   });
-};*/
+};
 
 function playTracks() {
   if (!audioCtx) return;
