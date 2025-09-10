@@ -14,7 +14,7 @@ let audioCtx;
 let contextCurrentTime;
 
 let songInfo = {
-  name: 'Música 1',
+  name: 'Nome da Música',
   currentTime: 0,
   duration: 0,
 };
@@ -58,7 +58,6 @@ function playTracks() {
   contextCurrentTime = trackAudioContextCurrentTime(
     audioCtx,
     (currentTime) => {
-      console.log('chamado:' + currentTime);
       songInfo.currentTime = currentTime.toFixed(2);
 
       tracksCurrentTimeLabel.innerText = songInfo.currentTime;
@@ -103,11 +102,11 @@ async function loadTracks() {
 
   tracksCurrentTime.addEventListener('input', () => {
     //get time from input range
+    songInfo.currentTime = tracksCurrentTime.value;
     //stop and clean all tracks element
     //calculate target time using audioCtx current time and offset
     //start all tracks element with the calculated time
-    songInfo.currentTime = tracksCurrentTime.value;
-    updateAllTracksTime(songInfo.currentTime);
+    //updateAllTracksTime(songInfo.currentTime);
   });
 
   tracksCurrentTime.hidden = false;
