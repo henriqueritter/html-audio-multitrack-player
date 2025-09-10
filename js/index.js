@@ -1,84 +1,112 @@
+const songNameElement = document.getElementById('songName');
 const tracksCurrentTime = document.getElementById('tracksCurrentTime');
 const tracksCurrentTimeLabel = document.getElementById(
   'tracksCurrentTimeLabel'
 );
+const tracksTotalDurationLabel = document.getElementById('tracksTotalDuration');
 const loadTracksButton = document.getElementById('loadTracks');
 const playTracksButton = document.getElementById('playTracks');
 const pauseTracksButton = document.getElementById('pauseTracks');
-
+const stopTracksButton = document.getElementById('stopTracks');
 const htmlTracksSection = document.getElementById('tracks');
 
 let audioCtx;
+let contextCurrentTime;
 
-const songInfo = {
+let songInfo = {
   name: 'Música 1',
   currentTime: 0,
   duration: 0,
 };
 
-const tracks = [
+let tracks = [
   {
     id: 1,
     name: 'Click',
-    isMuted: false,
     filePath: 'assets/click.mp3',
-  },
-  {
-    id: 2,
-    name: 'Click2',
+    audioBuffer: {},
+    mediaElement: {},
+    volume: 1,
+    gainNode: {},
+    pannerNode: {},
     isMuted: false,
-    filePath: 'assets/click.mp3',
+    startAt: 0,
+    pausedAt: 0,
+    isPlaying: false,
+    duration: '467.45',
   },
 ];
+
+/*
+window.onload = () => {
+  getSongAndTracksData().then((data) => {
+    songInfo = data.songInfo;
+    tracks = data.tracks;
+  });
+};*/
 
 function playTracks() {
   if (!audioCtx) return;
   if (audioCtx.state != 'running') audioCtx.resume();
 
+  let offset = audioCtx.currentTime;
+
   for (const track of tracks) {
-    if (track.audioElement.paused) track.audioElement.play();
+    if (!track.isPlaying)
+      track.mediaElement.start(0, audioCtx.currentTime - offset);
   }
+
+  contextCurrentTime = trackAudioContextCurrentTime(
+    audioCtx,
+    (currentTime) => {
+      console.log('chamado:' + currentTime);
+      songInfo.currentTime = currentTime.toFixed(2);
+
+      tracksCurrentTimeLabel.innerText = songInfo.currentTime;
+      tracksCurrentTime.value = songInfo.currentTime;
+    },
+    200
+  );
 }
 
 function pauseTracks() {
   if (!audioCtx) return;
   if (audioCtx.state != 'suspended') audioCtx.suspend();
+
+  clearInterval(contextCurrentTime);
 }
 
-function loadTracks() {
+async function loadTracks() {
   loadTracksButton.disabled = true;
-  loadTracksButton.hidden = true;
-  document.getElementById('songName').innerText = 'Loading...';
+  loadTracksButton.innerText = 'Loading...';
+  songNameElement.innerText = 'Loading...';
 
   if (!audioCtx) {
     audioCtx = new AudioContext();
     audioCtx.suspend();
   }
 
+  const loadTracksBufferPromises = tracks.map((track) => loadAudioTrack(track));
+  await Promise.all(loadTracksBufferPromises);
+
   for (const track of tracks) {
     createTrackElement(track);
-    if (track.audioElement) {
-      track.audioElement.addEventListener('loadeddata', () => {
-        if (songInfo.duration < track.audioElement.duration) {
-          songInfo.duration = track.audioElement.duration.toFixed(2);
 
-          tracksCurrentTime.setAttribute('max', songInfo.duration);
-          document.getElementById('tracksTotalDuration').innerText =
-            songInfo.duration;
-        }
-        track.audioElement.play();
-      });
+    if (track.audioBuffer) {
+      if (songInfo.duration < track.audioBuffer.duration) {
+        songInfo.duration = track.audioBuffer.duration.toFixed(2);
+
+        tracksCurrentTime.setAttribute('max', songInfo.duration);
+        tracksTotalDurationLabel.innerText = songInfo.duration;
+      }
     }
   }
 
-  tracks[0].audioElement.addEventListener('timeupdate', () => {
-    songInfo.currentTime = tracks[0].audioElement.currentTime.toFixed(2);
-
-    tracksCurrentTimeLabel.innerText = songInfo.currentTime;
-    tracksCurrentTime.value = songInfo.currentTime;
-  });
-
   tracksCurrentTime.addEventListener('input', () => {
+    //get time from input range
+    //stop and clean all tracks element
+    //calculate target time using audioCtx current time and offset
+    //start all tracks element with the calculated time
     songInfo.currentTime = tracksCurrentTime.value;
     updateAllTracksTime(songInfo.currentTime);
   });
@@ -86,7 +114,9 @@ function loadTracks() {
   tracksCurrentTime.hidden = false;
   playTracksButton.hidden = false;
   pauseTracksButton.hidden = false;
-  document.getElementById('songName').innerText = songInfo.name;
+  stopTracksButton.hidden = false;
+  loadTracksButton.hidden = true;
+  songNameElement.innerText = songInfo.name;
 }
 
 function updateAllTracksTime(time = 0) {

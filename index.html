@@ -56,6 +56,10 @@
         justify-content: center;
       }
 
+      button:hover {
+        opacity: 90%;
+      }
+
       #masterControls {
         display: flex;
         justify-content: space-between;
@@ -212,6 +216,7 @@
 
         <button id="playTracks" onclick="playTracks()" hidden>►</button>
         <button id="pauseTracks" onclick="pauseTracks()" hidden>||</button>
+        <button id="stopTracks" onclick="stopTracks()" hidden>■</button>
         <input
           type="range"
           name="tracksCurrentTime"
@@ -228,6 +233,12 @@
       <section id="tracks"></section>
     </main>
 
+    <script src="js/components/TrackElement.js"></script>
+    <script src="js/components/VolumeControls.js"></script>
+    <script src="js/components/AudioModifiersControls.js"></script>
+    <script src="js/components/TextElement.js"></script>
+    <script src="js/components/FaderInputRange.js"></script>
+    <script src="js/components/MuteButton.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/index.js"></script>
   </body>
