@@ -1,196 +1,29 @@
-function createTrackElement(track) {
-  const { id, name } = track;
-
-  createAudioElement(track);
-
-  if (!track.audioBuffer) console.warn('Audio Buffer may not be initialized.');
-  track.isMuted = false;
-  track.startAt = 0;
-  track.pausedAt = 0;
-  track.isPlaying = false;
-  track.duration = track.audioBuffer.duration.toFixed(2);
-
-  const htmlTrackElement = document.createElement('div');
-  htmlTrackElement.setAttribute('id', id);
-  htmlTrackElement.setAttribute('class', 'track');
-
-  htmlTrackElement.insertAdjacentElement(
-    'beforeend',
-    createHTMLTextElement({ id, text: name, className: 'trackName' })
+async function getSongAndTracksData() {
+  const response = await fetch(
+    'https://pub-2ee020cd36f344d7aa50a37abdbf165b.r2.dev/song-info-tracks.json'
   );
+  const { data } = await response.json();
 
-  const { htmlTrackVolumeControlsElement, htmlMuteButton, htmlVolumeInput } =
-    createTrackVolumeControls();
+  if (!data) return 'Response is empty.';
 
-  htmlTrackElement.insertAdjacentElement(
-    'beforeend',
-    htmlTrackVolumeControlsElement
-  );
-
-  const { htmlTrackPannerElement, htmlTrackAudioModifiersControlsElement } =
-    createTrackAudioModifiersControls();
-
-  htmlTrackElement.insertAdjacentElement(
-    'beforeend',
-    htmlTrackAudioModifiersControlsElement
-  );
-
-  htmlMuteButton.addEventListener('click', () => {
-    if (track.isMuted) {
-      htmlMuteButton.setAttribute('class', 'muteButton');
-      track.isMuted = false;
-      track.gainNode.gain.value = track.volume;
-      return;
-    }
-    htmlMuteButton.setAttribute('class', 'muteButton-active');
-    track.isMuted = true;
-    track.gainNode.gain.value = 0;
-    return;
-  });
-
-  htmlVolumeInput.addEventListener('input', () => {
-    track.volume = htmlVolumeInput.value;
-    if (!track.isMuted) track.gainNode.gain.value = track.volume;
-  });
-
-  htmlTrackPannerElement.addEventListener('input', () => {
-    track.pannerNode.pan.value = htmlTrackPannerElement.value;
-  });
-
-  //htmlTrackElement.insertAdjacentElement('beforeend', audioElement);
-  htmlTracksSection.insertAdjacentElement('beforeend', htmlTrackElement);
+  return data;
 }
 
-function createAudioElement(track) {
-  //const { filePath } = track;
-  //const audioElement = document.createElement('audio');
-  //audioElement.setAttribute('src', filePath);
-  //audioElement.setAttribute('controls', '');
-  //track.audioElement = audioElement;
-
-  track.mediaElement = new AudioBufferSourceNode(audioCtx, {
-    buffer: track.audioBuffer,
-  });
-
-  track.volume = 1;
-  track.gainNode = new GainNode(audioCtx);
-  track.gainNode.gain.value = track.volume;
-
-  track.pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
-
-  track.mediaElement
-    .connect(track.gainNode)
-    .connect(track.pannerNode)
-    .connect(audioCtx.destination);
-
-  //return audioElement;
-  return true;
+async function getAudioBufferFromFilePath(filepath) {
+  const response = await fetch(filepath);
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  return audioBuffer;
 }
 
-function createTrackAudioModifiersControls() {
-  const htmlTrackAudioModifiersControlsElement = document.createElement('div');
-  htmlTrackAudioModifiersControlsElement.setAttribute(
-    'class',
-    'audioModifiers'
-  );
-
-  htmlTrackAudioModifiersControlsElement.insertAdjacentElement(
-    'beforeend',
-    createHTMLTextElement({
-      HTMLElementType: 'label',
-      text: 'L',
-    })
-  );
-
-  const htmlTrackPannerElement = createTrackFaderInputRange({
-    className: 'trackPanner',
-    step: '0.01',
-    min: '-1',
-    max: '1',
-    initialValue: '0',
-  });
-
-  htmlTrackAudioModifiersControlsElement.insertAdjacentElement(
-    'beforeend',
-    htmlTrackPannerElement
-  );
-
-  htmlTrackAudioModifiersControlsElement.insertAdjacentElement(
-    'beforeend',
-    createHTMLTextElement({
-      HTMLElementType: 'label',
-      text: 'R',
-    })
-  );
-
-  return { htmlTrackPannerElement, htmlTrackAudioModifiersControlsElement };
+async function loadAudioTrack(track) {
+  const trackBuffer = await getAudioBufferFromFilePath(track.filePath);
+  track.audioBuffer = trackBuffer;
+  return;
 }
 
-function createTrackVolumeControls() {
-  const htmlTrackVolumeControlsElement = document.createElement('div');
-  htmlTrackVolumeControlsElement.setAttribute('class', 'volumeControls');
-
-  const htmlMuteButton = createTrackMuteButton();
-
-  htmlTrackVolumeControlsElement.insertAdjacentElement(
-    'beforeend',
-    htmlMuteButton
-  );
-
-  const htmlVolumeInput = createTrackFaderInputRange({
-    className: 'trackVolume',
-    step: '0.01',
-    min: '0',
-    max: '1.5',
-    initialValue: '1',
-  });
-
-  htmlTrackVolumeControlsElement.insertAdjacentElement(
-    'beforeend',
-    htmlVolumeInput
-  );
-
-  return { htmlTrackVolumeControlsElement, htmlMuteButton, htmlVolumeInput };
-}
-
-function createHTMLTextElement({
-  HTMLElementType = 'span',
-  id = '',
-  text,
-  className = '',
-}) {
-  const htmlTextElement = document.createElement(HTMLElementType);
-
-  if (id) htmlTextElement.setAttribute('id', id);
-  if (className) htmlTextElement.setAttribute('class', className);
-  if (text) htmlTextElement.innerText = text;
-
-  return htmlTextElement;
-}
-
-function createTrackFaderInputRange({
-  className = 'trackVolume',
-  step = '0.01',
-  min = '0',
-  max = '1.5',
-  initialValue = '1',
-}) {
-  const htmlTrackFader = document.createElement('input');
-  htmlTrackFader.setAttribute('class', className);
-  htmlTrackFader.setAttribute('type', 'range');
-  htmlTrackFader.setAttribute('step', step);
-  htmlTrackFader.setAttribute('min', min);
-  htmlTrackFader.setAttribute('max', max);
-  htmlTrackFader.setAttribute('value', initialValue);
-
-  return htmlTrackFader;
-}
-
-function createTrackMuteButton() {
-  const htmlMuteButton = document.createElement('button');
-  htmlMuteButton.setAttribute('id', 'mute');
-  htmlMuteButton.setAttribute('class', 'muteButton');
-  htmlMuteButton.innerText = 'Mute';
-
-  return htmlMuteButton;
+function trackAudioContextCurrentTime(audioCtx, callback, interval = 1000) {
+  return setInterval(() => {
+    callback(audioCtx.currentTime);
+  }, interval);
 }

@@ -1,46 +1,49 @@
+const songNameElement = document.getElementById('songName');
 const tracksCurrentTime = document.getElementById('tracksCurrentTime');
 const tracksCurrentTimeLabel = document.getElementById(
   'tracksCurrentTimeLabel'
 );
+const tracksTotalDurationLabel = document.getElementById('tracksTotalDuration');
 const loadTracksButton = document.getElementById('loadTracks');
 const playTracksButton = document.getElementById('playTracks');
 const pauseTracksButton = document.getElementById('pauseTracks');
-
+const stopTracksButton = document.getElementById('stopTracks');
 const htmlTracksSection = document.getElementById('tracks');
 
 let audioCtx;
+let contextCurrentTime;
 
-const songInfo = {
+let songInfo = {
   name: 'Música 1',
   currentTime: 0,
   duration: 0,
 };
 
-const tracks = [
+let tracks = [
   {
     id: 1,
     name: 'Click',
-    isMuted: false,
     filePath: 'assets/click.mp3',
-  },
-  {
-    id: 2,
-    name: 'Click2',
+    audioBuffer: {},
+    mediaElement: {},
+    volume: 1,
+    gainNode: {},
+    pannerNode: {},
     isMuted: false,
-    volume: 0,
-    filePath: 'assets/click.mp3',
+    startAt: 0,
+    pausedAt: 0,
+    isPlaying: false,
+    duration: '467.45',
   },
 ];
 
-//https://pub-2ee020cd36f344d7aa50a37abdbf165b.r2.dev/Click.mp3
-
-function trackAudioContextCurrentTime(audioCtx, callback, interval = 1000) {
-  return setInterval(() => {
-    callback(audioCtx.currentTime);
-  }, interval);
-}
-
-let contextCurrentTime;
+/*
+window.onload = () => {
+  getSongAndTracksData().then((data) => {
+    songInfo = data.songInfo;
+    tracks = data.tracks;
+  });
+};*/
 
 function playTracks() {
   if (!audioCtx) return;
@@ -56,11 +59,11 @@ function playTracks() {
   contextCurrentTime = trackAudioContextCurrentTime(
     audioCtx,
     (currentTime) => {
+      console.log('chamado:' + currentTime);
       songInfo.currentTime = currentTime.toFixed(2);
 
       tracksCurrentTimeLabel.innerText = songInfo.currentTime;
       tracksCurrentTime.value = songInfo.currentTime;
-      console.log('Tempo: ', currentTime.toFixed(2));
     },
     200
   );
@@ -72,56 +75,32 @@ function pauseTracks() {
 
   clearInterval(contextCurrentTime);
 }
-//------
-async function getAudioBufferFromFilePath(filepath) {
-  const response = await fetch(filepath);
-  const arrayBuffer = await response.arrayBuffer();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  return audioBuffer;
-}
 
-async function loadAudioTrackFromFilePath(filePath) {
-  const trackBuffer = await getAudioBufferFromFilePath(filePath);
-  return trackBuffer;
-}
-//---
-
-function loadTracks() {
+async function loadTracks() {
   loadTracksButton.disabled = true;
-  loadTracksButton.hidden = true;
-  document.getElementById('songName').innerText = 'Loading...';
+  loadTracksButton.innerText = 'Loading...';
+  songNameElement.innerText = 'Loading...';
 
   if (!audioCtx) {
     audioCtx = new AudioContext();
     audioCtx.suspend();
   }
 
+  const loadTracksBufferPromises = tracks.map((track) => loadAudioTrack(track));
+  await Promise.all(loadTracksBufferPromises);
+
   for (const track of tracks) {
-    loadAudioTrackFromFilePath(track.filePath).then((trackBuffer) => {
-      track.audioBuffer = trackBuffer;
+    createTrackElement(track);
 
-      createTrackElement(track);
+    if (track.audioBuffer) {
+      if (songInfo.duration < track.audioBuffer.duration) {
+        songInfo.duration = track.audioBuffer.duration.toFixed(2);
 
-      if (track.audioBuffer) {
-        if (songInfo.duration < track.audioBuffer.duration) {
-          songInfo.duration = track.audioBuffer.duration.toFixed(2);
-
-          tracksCurrentTime.setAttribute('max', songInfo.duration);
-          document.getElementById('tracksTotalDuration').innerText =
-            songInfo.duration;
-        }
+        tracksCurrentTime.setAttribute('max', songInfo.duration);
+        tracksTotalDurationLabel.innerText = songInfo.duration;
       }
-    });
+    }
   }
-
-  /*
-  tracks[0].mediaElement.addEventListener('timeupdate', () => {
-    songInfo.currentTime = tracks[0].mediaElement.audioBuffer.toFixed(2);
-
-    tracksCurrentTimeLabel.innerText = songInfo.currentTime;
-    tracksCurrentTime.value = songInfo.currentTime;
-  });
-  */
 
   tracksCurrentTime.addEventListener('input', () => {
     //get time from input range
@@ -135,7 +114,9 @@ function loadTracks() {
   tracksCurrentTime.hidden = false;
   playTracksButton.hidden = false;
   pauseTracksButton.hidden = false;
-  document.getElementById('songName').innerText = songInfo.name;
+  stopTracksButton.hidden = false;
+  loadTracksButton.hidden = true;
+  songNameElement.innerText = songInfo.name;
 }
 
 function updateAllTracksTime(time = 0) {
