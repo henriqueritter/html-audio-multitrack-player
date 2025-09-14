@@ -203,9 +203,77 @@
         margin: 0 0.75em;
       }
 
-      @media (min-width: 768px) {
-        html,
+      @media (max-width: 768px) {
         body {
+          font-weight: 300;
+        }
+        header {
+          text-align: center;
+          align-items: center;
+          align-content: center;
+          justify-content: center;
+        }
+
+        main {
+          margin-top: 0.5em;
+          height: auto;
+          justify-content: center;
+          align-items: center;
+        }
+
+        #masterControls {
+          flex-direction: row;
+          gap: 0.2em;
+          align-items: center;
+        }
+
+        #tracksCurrentTime {
+          width: 100%;
+          margin: 0.5em 0;
+        }
+
+        #tracks {
+          width: 100%;
+          padding: 0.5em;
+        }
+
+        .track {
+          display: flex;
+          flex-direction: column;
+          padding: 0.3em;
+          width: 90%;
+          justify-content: center;
+          text-align: center;
+          align-items: center;
+        }
+
+        .trackName {
+          text-align: center;
+          min-width: 100%;
+          font-size: 1.5em;
+        }
+
+        .volumeControls {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          justify-content: center;
+        }
+
+        .volumeControls input {
+          width: 90%;
+          margin-top: 0.5em;
+        }
+        .audioModifiers {
+          width: 90%;
+          justify-content: center;
+          margin: 0.5em 0;
+        }
+
+        .muteButton,
+        .muteButton-active {
+          width: 5em;
+          height: 1.5em;
         }
       }
     </style>
