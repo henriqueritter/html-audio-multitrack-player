@@ -85,6 +85,8 @@ async function loadTracks() {
   const loadTracksBufferPromises = tracks.map((track) => loadAudioTrack(track));
   await Promise.all(loadTracksBufferPromises);
 
+  songInfo.elapsedTime = 0;
+
   for (const track of tracks) {
     createTrackElement(track);
 
