@@ -10,6 +10,8 @@ const pauseTracksButton = document.getElementById('pauseTracks');
 const stopTracksButton = document.getElementById('stopTracks');
 const htmlTracksSection = document.getElementById('tracks');
 
+const interval = 250;
+
 let audioCtx;
 let contextCurrentTime;
 
@@ -17,25 +19,10 @@ let songInfo = {
   name: 'Nome da Música',
   currentTime: 0,
   duration: 0,
+  elapsedTime: 0,
 };
 
-let tracks = [
-  {
-    id: 1,
-    name: 'Click',
-    filePath: 'assets/click.mp3',
-    audioBuffer: {},
-    mediaElement: {},
-    volume: 1,
-    gainNode: {},
-    pannerNode: {},
-    isMuted: false,
-    startAt: 0,
-    pausedAt: 0,
-    isPlaying: false,
-    duration: '467.45',
-  },
-];
+let tracks = [];
 
 window.onload = () => {
   getSongAndTracksData().then((data) => {
@@ -46,25 +33,36 @@ window.onload = () => {
 
 function playTracks() {
   if (!audioCtx) return;
-  if (audioCtx.state != 'running') audioCtx.resume();
+  if (audioCtx.state == 'running') return;
+
+  audioCtx.resume();
+
+  contextCurrentTime = trackAudioContextCurrentTime(
+    songInfo,
+    (songInfo) => {
+      songInfo.elapsedTime = songInfo.elapsedTime + interval / 1000;
+
+      if (songInfo.elapsedTime >= songInfo.duration) {
+        songInfo.elapsedTime = parseFloat(songInfo.duration);
+        audioCtx.suspend();
+        clearInterval(contextCurrentTime);
+      }
+
+      tracksCurrentTimeLabel.innerText = songInfo.elapsedTime.toFixed(2);
+      tracksCurrentTime.value = songInfo.elapsedTime.toFixed(2);
+    },
+    interval
+  );
+
+  if (songInfo.initialized) return;
 
   let offset = audioCtx.currentTime;
 
   for (const track of tracks) {
-    if (!track.isPlaying)
-      track.mediaElement.start(0, audioCtx.currentTime - offset);
+    if (!track.isPlaying) startTrack(audioCtx.currentTime - offset, track);
   }
 
-  contextCurrentTime = trackAudioContextCurrentTime(
-    audioCtx,
-    (currentTime) => {
-      songInfo.currentTime = currentTime.toFixed(2);
-
-      tracksCurrentTimeLabel.innerText = songInfo.currentTime;
-      tracksCurrentTime.value = songInfo.currentTime;
-    },
-    200
-  );
+  songInfo.initialized = true;
 }
 
 function pauseTracks() {
@@ -90,7 +88,7 @@ async function loadTracks() {
   for (const track of tracks) {
     createTrackElement(track);
 
-    if (track.audioBuffer) {
+    if (tracks[0].audioBuffer) {
       if (songInfo.duration < track.audioBuffer.duration) {
         songInfo.duration = track.audioBuffer.duration.toFixed(2);
 
@@ -100,14 +98,7 @@ async function loadTracks() {
     }
   }
 
-  tracksCurrentTime.addEventListener('input', () => {
-    //get time from input range
-    songInfo.currentTime = tracksCurrentTime.value;
-    //stop and clean all tracks element
-    //calculate target time using audioCtx current time and offset
-    //start all tracks element with the calculated time
-    //updateAllTracksTime(songInfo.currentTime);
-  });
+  tracksCurrentTime.addEventListener('input', (e) => updateAllTracksTime(e));
 
   tracksCurrentTime.hidden = false;
   playTracksButton.hidden = false;
@@ -117,13 +108,28 @@ async function loadTracks() {
   songNameElement.innerText = songInfo.name;
 }
 
-function updateAllTracksTime(time = 0) {
-  if (time > songInfo.duration || time < 0) return;
+function updateAllTracksTime(event) {
+  const time = event.target.value;
 
-  tracksCurrentTimeLabel.innerText = songInfo.currentTime;
-  tracksCurrentTime.value = songInfo.currentTime;
+  let offset = time;
+  songInfo.elapsedTime = parseFloat(offset);
 
   for (const track of tracks) {
-    track.audioElement.currentTime = songInfo.currentTime;
+    track.mediaElement.stop();
+    track.mediaElement.disconnect();
+
+    track.mediaElement = new AudioBufferSourceNode(audioCtx, {
+      buffer: track.audioBuffer,
+    });
+
+    startTrack(offset, track);
   }
+}
+
+function startTrack(offset, track) {
+  track.mediaElement.start(0, offset);
+  track.mediaElement
+    .connect(track.gainNode)
+    .connect(track.pannerNode)
+    .connect(audioCtx.destination);
 }
