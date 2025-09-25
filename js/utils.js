@@ -22,8 +22,8 @@ async function loadAudioTrack(track) {
   return;
 }
 
-function trackAudioContextCurrentTime(audioCtx, callback, interval = 1000) {
+function trackAudioContextCurrentTime(currentTime, callback, interval = 1000) {
   return setInterval(() => {
-    callback(audioCtx.currentTime);
+    callback(currentTime);
   }, interval);
 }
