@@ -21,11 +21,6 @@ function createTrackElement(track) {
 
   track.pannerNode = new StereoPannerNode(audioCtx, { pan: 0 });
 
-  track.mediaElement
-    .connect(track.gainNode)
-    .connect(track.pannerNode)
-    .connect(audioCtx.destination);
-
   const htmlTrackElement = document.createElement('div');
   htmlTrackElement.setAttribute('id', id);
   htmlTrackElement.setAttribute('class', 'track');
