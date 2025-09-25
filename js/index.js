@@ -90,7 +90,7 @@ async function loadTracks() {
   for (const track of tracks) {
     createTrackElement(track);
 
-    if (tracks[0].audioBuffer) {
+    if (track.audioBuffer) {
       if (songInfo.duration < track.audioBuffer.duration) {
         songInfo.duration = track.audioBuffer.duration.toFixed(2);
 
